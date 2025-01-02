@@ -3,6 +3,7 @@ package game
 import (
 	"bufio"
 	"fmt"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
@@ -106,9 +107,17 @@ func (g *Game) GetMove() {
 	g.Display()
 }
 
+func (g *Game) BasicAI() {
+	num := rand.Intn(g.Width)
+	g.MakeMove(num)
+	g.Display()
+}
+
 func (g *Game) GameLoop() {
 	for !g.HasWinner {
 		g.GetMove()
+		g.Check4Wins()
+		g.BasicAI()
 		g.Check4Wins()
 	}
 }
