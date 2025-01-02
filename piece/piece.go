@@ -29,6 +29,7 @@ func InitPiece(chp string) *Piece {
 		chip: chp,
 	}
 }
+
 func (p *Piece) Display() string {
 	return p.chip
 }
