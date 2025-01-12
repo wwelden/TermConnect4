@@ -22,6 +22,8 @@ func InitPiece(chp string) *Piece {
 		chp = "🔴"
 	case "yellow":
 		chp = "🟡"
+	case "green":
+		chp = "🟢"
 	case "blank":
 		chp = "  "
 	}

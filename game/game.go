@@ -120,7 +120,8 @@ func (g *Game) GameLoop() {
 	for !g.HasWinner {
 		g.GetMove()
 		g.Check4Wins()
-		g.BasicAI()
+		// g.BasicAI()
+		g.AiMove()
 		g.Check4Wins()
 	}
 }
@@ -183,17 +184,14 @@ func (g *Game) Check4Diagonal(count int, player string) bool {
 	// Check diagonal down-right
 	for col := 0; col <= g.Width-count; col++ {
 		for row := 0; row <= g.Height-count; row++ {
-			redWin := true
-			yellowWin := true
+			win := true
 			for i := 0; i < count; i++ {
 				if g.Board[row+i][col+i].GetChip() != checkVal {
-					redWin = false
+					win = false
+					break
 				}
 			}
-			if redWin {
-				return true
-			}
-			if yellowWin {
+			if win {
 				return true
 			}
 		}
@@ -202,20 +200,14 @@ func (g *Game) Check4Diagonal(count int, player string) bool {
 	// Check diagonal down-left
 	for col := count - 1; col < g.Width; col++ {
 		for row := 0; row <= g.Height-count; row++ {
-			redWin := true
-			yellowWin := true
+			win := true
 			for i := 0; i < count; i++ {
 				if g.Board[row+i][col-i].GetChip() != checkVal {
-					redWin = false
-				}
-				if g.Board[row+i][col-i].GetChip() != checkVal {
-					yellowWin = false
+					win = false
+					break
 				}
 			}
-			if redWin {
-				return true
-			}
-			if yellowWin {
+			if win {
 				return true
 			}
 		}
@@ -225,11 +217,13 @@ func (g *Game) Check4Diagonal(count int, player string) bool {
 
 func (g *Game) RedWin() {
 	g.HasWinner = true
+	g.ShowWinningMove(-1) // -1 since we don't need the column number
 	fmt.Println("Red Won")
 }
 
 func (g *Game) YellowWin() {
 	g.HasWinner = true
+	g.ShowWinningMove(-1) // -1 since we don't need the column number
 	fmt.Println("Yellow Won")
 }
 func (g *Game) Check4AllWins(num int, player string) bool {
@@ -270,17 +264,117 @@ func (g *Game) findGoodSpot() {
 	g.MakeMove(row)
 }
 
-// func (g *Game) CheckIfWin(row, col int) bool {
+func (g *Game) IsWinningMove(col int) bool {
+	// Get the row where the piece would land
+	row, col := g.LastEmptyRow2(col)
+	if row == -1 {
+		return false
+	}
 
-// }
+	// Temporarily make the move and check for red win
+	originalPiece := g.Board[row][col]
+	g.Board[row][col] = *piece.InitPiece("red")
+	redWins := g.Check4AllWins(4, "red")
 
-// func (g *Game) IsWinningMove(col int) bool {
-// 	row := g.LastEmptyRow(col)
-// 	g.CheckIfWin(row, col)
-// }
+	// Check for yellow win
+	g.Board[row][col] = *piece.InitPiece("yellow")
+	yellowWins := g.Check4AllWins(4, "yellow")
 
-// func (g *Game) AiMove() {
-// 	for _, col := range g.Board {
+	// Undo the move
+	g.Board[row][col] = originalPiece
 
-// 	}
-// }
+	return redWins || yellowWins
+}
+
+func (g *Game) AiMove() {
+	for i := 0; i < g.Width; i++ {
+		if g.IsWinningMove(i) {
+			g.MakeMove(i)
+			g.Display()
+			return
+		}
+	}
+	g.findGoodSpot()
+	g.Display()
+}
+
+func (g *Game) ShowWinningMove(col int) {
+	// Get the winning sequence coordinates
+	coords := g.findWinningSequence()
+	if len(coords) == 4 {
+		// Store original pieces
+		originals := make([]piece.Piece, 4)
+		for i, coord := range coords {
+			originals[i] = g.Board[coord[0]][coord[1]]
+			g.Board[coord[0]][coord[1]] = *piece.InitPiece("green")
+		}
+
+		// Display the board with green pieces
+		g.Display()
+
+		// Restore original pieces
+		for i, coord := range coords {
+			g.Board[coord[0]][coord[1]] = originals[i]
+		}
+	}
+}
+
+func (g *Game) findWinningSequence() [][2]int {
+	// Check horizontal
+	for i := 0; i < g.Height; i++ {
+		for j := 0; j <= g.Width-4; j++ {
+			if !g.Board[i][j].IsEmpty() {
+				chip := g.Board[i][j].GetChip()
+				if g.Board[i][j+1].GetChip() == chip &&
+					g.Board[i][j+2].GetChip() == chip &&
+					g.Board[i][j+3].GetChip() == chip {
+					return [][2]int{{i, j}, {i, j + 1}, {i, j + 2}, {i, j + 3}}
+				}
+			}
+		}
+	}
+
+	// Check vertical
+	for i := 0; i <= g.Height-4; i++ {
+		for j := 0; j < g.Width; j++ {
+			if !g.Board[i][j].IsEmpty() {
+				chip := g.Board[i][j].GetChip()
+				if g.Board[i+1][j].GetChip() == chip &&
+					g.Board[i+2][j].GetChip() == chip &&
+					g.Board[i+3][j].GetChip() == chip {
+					return [][2]int{{i, j}, {i + 1, j}, {i + 2, j}, {i + 3, j}}
+				}
+			}
+		}
+	}
+
+	// Check diagonal (down-right)
+	for i := 0; i <= g.Height-4; i++ {
+		for j := 0; j <= g.Width-4; j++ {
+			if !g.Board[i][j].IsEmpty() {
+				chip := g.Board[i][j].GetChip()
+				if g.Board[i+1][j+1].GetChip() == chip &&
+					g.Board[i+2][j+2].GetChip() == chip &&
+					g.Board[i+3][j+3].GetChip() == chip {
+					return [][2]int{{i, j}, {i + 1, j + 1}, {i + 2, j + 2}, {i + 3, j + 3}}
+				}
+			}
+		}
+	}
+
+	// Check diagonal (down-left)
+	for i := 0; i <= g.Height-4; i++ {
+		for j := 3; j < g.Width; j++ {
+			if !g.Board[i][j].IsEmpty() {
+				chip := g.Board[i][j].GetChip()
+				if g.Board[i+1][j-1].GetChip() == chip &&
+					g.Board[i+2][j-2].GetChip() == chip &&
+					g.Board[i+3][j-3].GetChip() == chip {
+					return [][2]int{{i, j}, {i + 1, j - 1}, {i + 2, j - 2}, {i + 3, j - 3}}
+				}
+			}
+		}
+	}
+
+	return [][2]int{}
+}

@@ -186,31 +186,189 @@ func TestCheck4AllWins(t *testing.T) {
 }
 
 func TestCheck4Wins(t *testing.T) {
+	// Test horizontal wins
+	t.Run("Horizontal Red Win", func(t *testing.T) {
+		g := NewGame(7, 6)
+		g.Start()
+
+		g.Board[0][0] = *piece.InitPiece("red")
+		g.Board[0][1] = *piece.InitPiece("red")
+		g.Board[0][2] = *piece.InitPiece("red")
+		g.Board[0][3] = *piece.InitPiece("red")
+
+		g.Check4Wins()
+		if !g.HasWinner {
+			t.Error("Check4Wins should detect horizontal red win")
+		}
+	})
+
+	t.Run("Horizontal Yellow Win", func(t *testing.T) {
+		g := NewGame(7, 6)
+		g.Start()
+
+		g.Board[0][0] = *piece.InitPiece("yellow")
+		g.Board[0][1] = *piece.InitPiece("yellow")
+		g.Board[0][2] = *piece.InitPiece("yellow")
+		g.Board[0][3] = *piece.InitPiece("yellow")
+
+		g.Check4Wins()
+		if !g.HasWinner {
+			t.Error("Check4Wins should detect horizontal yellow win")
+		}
+	})
+
+	// Test vertical wins
+	t.Run("Vertical Red Win", func(t *testing.T) {
+		g := NewGame(7, 6)
+		g.Start()
+
+		g.Board[0][0] = *piece.InitPiece("red")
+		g.Board[1][0] = *piece.InitPiece("red")
+		g.Board[2][0] = *piece.InitPiece("red")
+		g.Board[3][0] = *piece.InitPiece("red")
+
+		g.Check4Wins()
+		if !g.HasWinner {
+			t.Error("Check4Wins should detect vertical red win")
+		}
+	})
+
+	t.Run("Vertical Yellow Win", func(t *testing.T) {
+		g := NewGame(7, 6)
+		g.Start()
+
+		g.Board[0][0] = *piece.InitPiece("yellow")
+		g.Board[1][0] = *piece.InitPiece("yellow")
+		g.Board[2][0] = *piece.InitPiece("yellow")
+		g.Board[3][0] = *piece.InitPiece("yellow")
+
+		g.Check4Wins()
+		if !g.HasWinner {
+			t.Error("Check4Wins should detect vertical yellow win")
+		}
+	})
+
+	// Test diagonal wins
+	t.Run("Diagonal Red Win", func(t *testing.T) {
+		g := NewGame(7, 6)
+		g.Start()
+
+		g.Board[0][0] = *piece.InitPiece("red")
+		g.Board[1][1] = *piece.InitPiece("red")
+		g.Board[2][2] = *piece.InitPiece("red")
+		g.Board[3][3] = *piece.InitPiece("red")
+
+		g.Check4Wins()
+		if !g.HasWinner {
+			t.Error("Check4Wins should detect diagonal red win")
+		}
+	})
+
+	t.Run("Diagonal Yellow Win", func(t *testing.T) {
+		g := NewGame(7, 6)
+		g.Start()
+
+		g.Board[3][0] = *piece.InitPiece("yellow")
+		g.Board[2][1] = *piece.InitPiece("yellow")
+		g.Board[1][2] = *piece.InitPiece("yellow")
+		g.Board[0][3] = *piece.InitPiece("yellow")
+
+		g.Check4Wins()
+		if !g.HasWinner {
+			t.Error("Check4Wins should detect diagonal yellow win")
+		}
+	})
+
+	// Test no win condition
+	t.Run("No Win", func(t *testing.T) {
+		g := NewGame(7, 6)
+		g.Start()
+
+		g.Board[0][0] = *piece.InitPiece("red")
+		g.Board[0][1] = *piece.InitPiece("yellow")
+		g.Board[0][2] = *piece.InitPiece("red")
+
+		g.Check4Wins()
+		if g.HasWinner {
+			t.Error("Check4Wins should not detect win with only 3 pieces")
+		}
+	})
+}
+
+func TestIsWinningMove(t *testing.T) {
 	g := NewGame(7, 6)
 	g.Start()
 
-	// Test that Check4Wins catches horizontal win
+	// Test horizontal winning move
 	g.Board[0][0] = *piece.InitPiece("red")
 	g.Board[0][1] = *piece.InitPiece("red")
 	g.Board[0][2] = *piece.InitPiece("red")
-	g.Board[0][3] = *piece.InitPiece("red")
-
-	g.Check4Wins()
-	if !g.HasWinner {
-		t.Error("Check4Wins should detect horizontal win")
+	if !g.IsWinningMove(3) {
+		t.Error("Should detect horizontal winning move")
 	}
 
-	// Reset and test vertical win
+	// Test vertical winning move
 	g = NewGame(7, 6)
 	g.Start()
-
 	g.Board[0][0] = *piece.InitPiece("yellow")
 	g.Board[1][0] = *piece.InitPiece("yellow")
 	g.Board[2][0] = *piece.InitPiece("yellow")
-	g.Board[3][0] = *piece.InitPiece("yellow")
+	if !g.IsWinningMove(0) {
+		t.Error("Should detect vertical winning move")
+	}
 
-	g.Check4Wins()
-	if !g.HasWinner {
-		t.Error("Check4Wins should detect vertical win")
+	// Test diagonal winning move (bottom-left to top-right)
+	g = NewGame(7, 6)
+	g.Start()
+	g.Board[0][0] = *piece.InitPiece("red")
+	g.Board[1][1] = *piece.InitPiece("red")
+	g.Board[2][2] = *piece.InitPiece("red")
+	// Add pieces below to support the winning move
+	g.Board[0][3] = *piece.InitPiece("yellow")
+	g.Board[1][3] = *piece.InitPiece("yellow")
+	g.Board[2][3] = *piece.InitPiece("yellow")
+	if !g.IsWinningMove(3) {
+		t.Error("Should detect diagonal winning move (bottom-left to top-right)")
+	}
+
+	// Test diagonal winning move (top-left to bottom-right)
+	g = NewGame(7, 6)
+	g.Start()
+	g.Board[3][0] = *piece.InitPiece("yellow")
+	g.Board[2][1] = *piece.InitPiece("yellow")
+	g.Board[1][2] = *piece.InitPiece("yellow")
+	// Add pieces below to support the winning move
+	g.Board[0][3] = *piece.InitPiece("red")
+	if !g.IsWinningMove(3) {
+		t.Error("Should detect diagonal winning move (top-left to bottom-right)")
+	}
+
+	// Test invalid column
+	g = NewGame(7, 6)
+	g.Start()
+	if g.IsWinningMove(-1) {
+		t.Error("Should return false for invalid column")
+	}
+	if g.IsWinningMove(7) {
+		t.Error("Should return false for invalid column")
+	}
+
+	// Test full column
+	g = NewGame(7, 6)
+	g.Start()
+	for i := 0; i < g.Height; i++ {
+		g.Board[i][0] = *piece.InitPiece("red")
+	}
+	if g.IsWinningMove(0) {
+		t.Error("Should return false for full column")
+	}
+
+	// Test non-winning move
+	g = NewGame(7, 6)
+	g.Start()
+	g.Board[0][0] = *piece.InitPiece("red")
+	g.Board[0][1] = *piece.InitPiece("yellow")
+	if g.IsWinningMove(2) {
+		t.Error("Should return false for non-winning move")
 	}
 }
