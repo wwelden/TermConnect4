@@ -87,7 +87,7 @@ func TestCheck4Horizontal(t *testing.T) {
 	g.Board[0][2] = *piece.InitPiece("red")
 	g.Board[0][3] = *piece.InitPiece("red")
 
-	g.Check4Horizontal()
+	g.Check4Horizontal(4, "red")
 	if !g.HasWinner {
 		t.Error("Expected horizontal red win")
 	}
@@ -102,7 +102,7 @@ func TestCheck4Horizontal(t *testing.T) {
 	g.Board[0][2] = *piece.InitPiece("yellow")
 	g.Board[0][3] = *piece.InitPiece("yellow")
 
-	g.Check4Horizontal()
+	g.Check4Horizontal(4, "yellow")
 	if !g.HasWinner {
 		t.Error("Expected horizontal yellow win")
 	}
@@ -118,7 +118,7 @@ func TestCheck4Vertical(t *testing.T) {
 	g.Board[2][0] = *piece.InitPiece("red")
 	g.Board[3][0] = *piece.InitPiece("red")
 
-	g.Check4Vertical()
+	g.Check4Vertical(4, "red")
 	if !g.HasWinner {
 		t.Error("Expected vertical red win")
 	}
@@ -133,7 +133,7 @@ func TestCheck4Vertical(t *testing.T) {
 	g.Board[2][0] = *piece.InitPiece("yellow")
 	g.Board[3][0] = *piece.InitPiece("yellow")
 
-	g.Check4Vertical()
+	g.Check4Vertical(4, "yellow")
 	if !g.HasWinner {
 		t.Error("Expected vertical yellow win")
 	}
@@ -149,7 +149,7 @@ func TestCheck4Diagonal(t *testing.T) {
 	g.Board[2][2] = *piece.InitPiece("red")
 	g.Board[3][3] = *piece.InitPiece("red")
 
-	g.Check4Diagonal()
+	g.Check4Diagonal(4, "red")
 	if !g.HasWinner {
 		t.Error("Expected diagonal red win")
 	}
@@ -164,9 +164,24 @@ func TestCheck4Diagonal(t *testing.T) {
 	g.Board[1][2] = *piece.InitPiece("yellow")
 	g.Board[0][3] = *piece.InitPiece("yellow")
 
-	g.Check4Diagonal()
+	g.Check4Diagonal(4, "yellow")
 	if !g.HasWinner {
 		t.Error("Expected diagonal yellow win")
+	}
+}
+
+func TestCheck4AllWins(t *testing.T) {
+	g := NewGame(7, 6)
+	g.Start()
+
+	g.Board[0][0] = *piece.InitPiece("red")
+	g.Board[0][1] = *piece.InitPiece("red")
+	g.Board[0][2] = *piece.InitPiece("red")
+	g.Board[0][3] = *piece.InitPiece("red")
+
+	g.Check4AllWins(4, "red")
+	if !g.HasWinner {
+		t.Error("Expected diagonal red win")
 	}
 }
 

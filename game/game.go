@@ -3,7 +3,7 @@ package game
 import (
 	"bufio"
 	"fmt"
-	"math/rand"
+
 	"os"
 	"strconv"
 	"strings"
@@ -36,6 +36,8 @@ func (g *Game) Display() {
 
 	fmt.Print(printOut)
 	fmt.Print(bar)
+
+	fmt.Print(" 1  2  3  4  5  6  7  8 \n")
 }
 
 func (g *Game) EmptyBoard() {
@@ -108,8 +110,9 @@ func (g *Game) GetMove() {
 }
 
 func (g *Game) BasicAI() {
-	num := rand.Intn(g.Width)
-	g.MakeMove(num)
+	// num := rand.Intn(g.Width)
+	// g.MakeMove(num)
+	g.findGoodSpot()
 	g.Display()
 }
 
@@ -130,87 +133,154 @@ func Contains(block []piece.Piece, input string) bool {
 	return strings.Contains(strBlock, input) //cheap solution but why reinvent the wheel
 }
 
-func (g *Game) Check4Horizontal() {
+func (g *Game) Check4Horizontal(count int, player string) bool {
+	checkVal := ""
+	if player == "red" {
+		checkVal = "🔴"
+	} else if player == "yellow" {
+		checkVal = "🟡"
+	}
 	for _, row := range g.Board {
-		if Contains(row, "🔴🔴🔴🔴") {
-			g.HasWinner = true
-			fmt.Println("Red Won")
-		}
-		if Contains(row, "🟡🟡🟡🟡") {
-			g.HasWinner = true
-			fmt.Println("Yellow Won")
+		redString := strings.Repeat(checkVal, count)
+		if Contains(row, redString) {
+			return true
 		}
 	}
+
+	return false
 }
 
-func (g *Game) Check4Vertical() {
+func (g *Game) Check4Vertical(count int, player string) bool {
+	checkVal := ""
+	if player == "red" {
+		checkVal = "🔴"
+	} else if player == "yellow" {
+		checkVal = "🟡"
+	}
 	for col := 0; col < g.Width; col++ {
-		for row := 0; row <= g.Height-4; row++ {
-			if g.Board[row][col].GetChip() == "🔴" &&
-				g.Board[row+1][col].GetChip() == "🔴" &&
-				g.Board[row+2][col].GetChip() == "🔴" &&
-				g.Board[row+3][col].GetChip() == "🔴" {
-				g.HasWinner = true
-				fmt.Println("Red Won")
-				return
+		for row := 0; row <= g.Height-count; row++ {
+			win := true
+			for i := 0; i < count; i++ {
+				if g.Board[row+i][col].GetChip() != checkVal {
+					win = false
+				}
 			}
-			if g.Board[row][col].GetChip() == "🟡" &&
-				g.Board[row+1][col].GetChip() == "🟡" &&
-				g.Board[row+2][col].GetChip() == "🟡" &&
-				g.Board[row+3][col].GetChip() == "🟡" {
-				g.HasWinner = true
-				fmt.Println("Yellow Won")
-				return
+			if win {
+				return true
 			}
 		}
 	}
+	return false
 }
 
-func (g *Game) Check4Diagonal() {
-	for col := 0; col <= g.Width-4; col++ {
-		for row := 0; row <= g.Height-4; row++ {
-			if g.Board[row][col].GetChip() == "🔴" &&
-				g.Board[row+1][col+1].GetChip() == "🔴" &&
-				g.Board[row+2][col+2].GetChip() == "🔴" &&
-				g.Board[row+3][col+3].GetChip() == "🔴" {
-				g.HasWinner = true
-				fmt.Println("Red Won")
-				return
+func (g *Game) Check4Diagonal(count int, player string) bool {
+	checkVal := ""
+	if player == "red" {
+		checkVal = "🔴"
+	} else if player == "yellow" {
+		checkVal = "🟡"
+	}
+	// Check diagonal down-right
+	for col := 0; col <= g.Width-count; col++ {
+		for row := 0; row <= g.Height-count; row++ {
+			redWin := true
+			yellowWin := true
+			for i := 0; i < count; i++ {
+				if g.Board[row+i][col+i].GetChip() != checkVal {
+					redWin = false
+				}
 			}
-			if g.Board[row][col].GetChip() == "🟡" &&
-				g.Board[row+1][col+1].GetChip() == "🟡" &&
-				g.Board[row+2][col+2].GetChip() == "🟡" &&
-				g.Board[row+3][col+3].GetChip() == "🟡" {
-				g.HasWinner = true
-				fmt.Println("Yellow Won")
-				return
+			if redWin {
+				return true
+			}
+			if yellowWin {
+				return true
 			}
 		}
 	}
-	for col := 3; col < g.Width; col++ {
-		for row := 0; row <= g.Height-4; row++ {
-			if g.Board[row][col].GetChip() == "🔴" &&
-				g.Board[row+1][col-1].GetChip() == "🔴" &&
-				g.Board[row+2][col-2].GetChip() == "🔴" &&
-				g.Board[row+3][col-3].GetChip() == "🔴" {
-				g.HasWinner = true
-				fmt.Println("Red Won")
-				return
+
+	// Check diagonal down-left
+	for col := count - 1; col < g.Width; col++ {
+		for row := 0; row <= g.Height-count; row++ {
+			redWin := true
+			yellowWin := true
+			for i := 0; i < count; i++ {
+				if g.Board[row+i][col-i].GetChip() != checkVal {
+					redWin = false
+				}
+				if g.Board[row+i][col-i].GetChip() != checkVal {
+					yellowWin = false
+				}
 			}
-			if g.Board[row][col].GetChip() == "🟡" &&
-				g.Board[row+1][col-1].GetChip() == "🟡" &&
-				g.Board[row+2][col-2].GetChip() == "🟡" &&
-				g.Board[row+3][col-3].GetChip() == "🟡" {
-				g.HasWinner = true
-				fmt.Println("Yellow Won")
-				return
+			if redWin {
+				return true
+			}
+			if yellowWin {
+				return true
 			}
 		}
 	}
+	return false
+}
+
+func (g *Game) RedWin() {
+	g.HasWinner = true
+	fmt.Println("Red Won")
+}
+
+func (g *Game) YellowWin() {
+	g.HasWinner = true
+	fmt.Println("Yellow Won")
+}
+func (g *Game) Check4AllWins(num int, player string) bool {
+	return g.Check4Horizontal(num, player) || g.Check4Vertical(num, player) || g.Check4Diagonal(num, player)
 }
 
 func (g *Game) Check4Wins() {
-	g.Check4Horizontal()
-	g.Check4Vertical()
-	g.Check4Diagonal()
+	if g.Check4AllWins(4, "red") {
+		g.RedWin()
+	} else if g.Check4AllWins(4, "yellow") {
+		g.YellowWin()
+	}
 }
+
+func (g *Game) LastEmptyRow2(dex int) (int, int) {
+	if dex < 0 || dex >= g.Width {
+		return -1, -1
+	}
+
+	for y := g.Height - 1; y >= 0; y-- {
+		if g.Board[y][dex].IsEmpty() {
+			return y, dex
+		}
+	}
+	return -1, -1
+}
+
+func (g *Game) findGoodSpot() {
+	max := 0
+	row := 0
+	for i := 0; i < g.Width; i++ {
+		val, r := g.LastEmptyRow2(i)
+		if val > max {
+			max = val
+			row = r
+		}
+	}
+	g.MakeMove(row)
+}
+
+// func (g *Game) CheckIfWin(row, col int) bool {
+
+// }
+
+// func (g *Game) IsWinningMove(col int) bool {
+// 	row := g.LastEmptyRow(col)
+// 	g.CheckIfWin(row, col)
+// }
+
+// func (g *Game) AiMove() {
+// 	for _, col := range g.Board {
+
+// 	}
+// }
