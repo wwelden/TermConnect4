@@ -217,13 +217,13 @@ func (g *Game) Check4Diagonal(count int, player string) bool {
 
 func (g *Game) RedWin() {
 	g.HasWinner = true
-	g.ShowWinningMove(-1) // -1 since we don't need the column number
+	g.ShowWinningMove()
 	fmt.Println("Red Won")
 }
 
 func (g *Game) YellowWin() {
 	g.HasWinner = true
-	g.ShowWinningMove(-1) // -1 since we don't need the column number
+	g.ShowWinningMove()
 	fmt.Println("Yellow Won")
 }
 func (g *Game) Check4AllWins(num int, player string) bool {
@@ -298,7 +298,7 @@ func (g *Game) AiMove() {
 	g.Display()
 }
 
-func (g *Game) ShowWinningMove(col int) {
+func (g *Game) ShowWinningMove() {
 	// Get the winning sequence coordinates
 	coords := g.findWinningSequence()
 	if len(coords) == 4 {
