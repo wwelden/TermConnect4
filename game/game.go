@@ -131,25 +131,19 @@ func Contains(block []piece.Piece, input string) bool {
 	return strings.Contains(strBlock, input)
 }
 
-func (g *Game) RedWin() {
+func (g *Game) HandleWin(color string) {
 	g.HasWinner = true
 	g.ShowWinningMove()
-	fmt.Println("Red Won")
-}
-
-func (g *Game) YellowWin() {
-	g.HasWinner = true
-	g.ShowWinningMove()
-	fmt.Println("Yellow Won")
+	fmt.Printf("%s Won\n", color)
 }
 
 func (g *Game) Check4Wins() {
 	if result := g.findWinningSequence(); len(result) > 0 {
 		g.HasWinner = true
 		if g.Board[result[0][0]][result[0][1]].IsRed() {
-			g.RedWin()
+			g.HandleWin("Red")
 		} else {
-			g.YellowWin()
+			g.HandleWin("Yellow")
 		}
 	}
 }
@@ -180,23 +174,21 @@ func (g *Game) findGoodSpot() {
 	g.MakeMove(row)
 }
 
+func (g *Game) CheckWinningSequenceAfterPlacement(player string, row int, col int) bool {
+	g.Board[row][col] = *piece.InitPiece(player)
+	result := g.findWinningSequence()
+	return len(result) > 0
+}
+
 func (g *Game) IsWinningMove(col int) bool {
 	row, col := g.LastEmptyRow2(col)
 	if row == -1 {
 		return false
 	}
-
 	originalPiece := g.Board[row][col]
-	g.Board[row][col] = *piece.InitPiece("red")
-	redResult := g.findWinningSequence()
-	redWins := len(redResult) > 0
-
-	g.Board[row][col] = *piece.InitPiece("yellow")
-	yellowResult := g.findWinningSequence()
-	yellowWins := len(yellowResult) > 0
-
+	redWins := g.CheckWinningSequenceAfterPlacement("red", row, col)
+	yellowWins := g.CheckWinningSequenceAfterPlacement("yellow", row, col)
 	g.Board[row][col] = originalPiece
-
 	return redWins || yellowWins
 }
 
