@@ -319,62 +319,40 @@ func (g *Game) ShowWinningMove() {
 	}
 }
 
+
+func (g *Game) FindMatchingSequence(jVal int, hOffSet int, wOffSet int, coords [][2]int) [][2]int {
+	for i := 0; i <= g.Height-hOffSet-1; i++ {
+		for j := jVal; j <= g.Width-wOffSet-1; j++ {
+			if !g.Board[i][j].IsEmpty() {
+				chip := g.Board[i][j].GetChip()
+				nextI1 := i + coords[0][0]
+				nextJ1 := j + coords[0][1]
+				nextI2 := i + coords[1][0]
+				nextJ2 := j + coords[1][1]
+				nextI3 := i + coords[2][0]
+				nextJ3 := j + coords[2][1]
+
+				if g.Board[nextI1][nextJ1].GetChip() == chip &&
+					g.Board[nextI2][nextJ2].GetChip() == chip &&
+					g.Board[nextI3][nextJ3].GetChip() == chip {
+					return [][2]int{{i, j}, {nextI1, nextJ1}, {nextI2, nextJ2}, {nextI3, nextJ3}}
+				}
+			}
+		}
+	}
+	return [][2]int{}
+}
+
 func (g *Game) findWinningSequence() [][2]int {
-	// Check horizontal
-	for i := 0; i < g.Height; i++ {
-		for j := 0; j <= g.Width-4; j++ {
-			if !g.Board[i][j].IsEmpty() {
-				chip := g.Board[i][j].GetChip()
-				if g.Board[i][j+1].GetChip() == chip &&
-					g.Board[i][j+2].GetChip() == chip &&
-					g.Board[i][j+3].GetChip() == chip {
-					return [][2]int{{i, j}, {i, j + 1}, {i, j + 2}, {i, j + 3}}
-				}
-			}
-		}
-	}
+	horizontalVals := [][2]int{{0, 1}, {0, 2}, {0, 3}}
+	verticalVals := [][2]int{{1, 0}, {2, 0}, {3, 0}}
+	rightDiagonalVals := [][2]int{{1, 1}, {2, 2}, {3, 3}}
+	leftDiagonalVals := [][2]int{{1, -1}, {2, -2}, {3, -3}}
 
-	// Check vertical
-	for i := 0; i <= g.Height-4; i++ {
-		for j := 0; j < g.Width; j++ {
-			if !g.Board[i][j].IsEmpty() {
-				chip := g.Board[i][j].GetChip()
-				if g.Board[i+1][j].GetChip() == chip &&
-					g.Board[i+2][j].GetChip() == chip &&
-					g.Board[i+3][j].GetChip() == chip {
-					return [][2]int{{i, j}, {i + 1, j}, {i + 2, j}, {i + 3, j}}
-				}
-			}
-		}
-	}
-
-	// Check diagonal (down-right)
-	for i := 0; i <= g.Height-4; i++ {
-		for j := 0; j <= g.Width-4; j++ {
-			if !g.Board[i][j].IsEmpty() {
-				chip := g.Board[i][j].GetChip()
-				if g.Board[i+1][j+1].GetChip() == chip &&
-					g.Board[i+2][j+2].GetChip() == chip &&
-					g.Board[i+3][j+3].GetChip() == chip {
-					return [][2]int{{i, j}, {i + 1, j + 1}, {i + 2, j + 2}, {i + 3, j + 3}}
-				}
-			}
-		}
-	}
-
-	// Check diagonal (down-left)
-	for i := 0; i <= g.Height-4; i++ {
-		for j := 3; j < g.Width; j++ {
-			if !g.Board[i][j].IsEmpty() {
-				chip := g.Board[i][j].GetChip()
-				if g.Board[i+1][j-1].GetChip() == chip &&
-					g.Board[i+2][j-2].GetChip() == chip &&
-					g.Board[i+3][j-3].GetChip() == chip {
-					return [][2]int{{i, j}, {i + 1, j - 1}, {i + 2, j - 2}, {i + 3, j - 3}}
-				}
-			}
-		}
-	}
+	if result := g.FindMatchingSequence(0, 0, 3, horizontalVals); len(result) > 0 {return result}
+	if result := g.FindMatchingSequence(0, 3, 0, verticalVals); len(result) > 0 {return result}
+	if result := g.FindMatchingSequence(0, 3, 3, rightDiagonalVals); len(result) > 0 {return result}
+	if result := g.FindMatchingSequence(3, 3, 3, leftDiagonalVals); len(result) > 0 {return result}
 
 	return [][2]int{}
 }
