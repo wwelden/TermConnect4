@@ -110,8 +110,6 @@ func (g *Game) GetMove() {
 }
 
 func (g *Game) BasicAI() {
-	// num := rand.Intn(g.Width)
-	// g.MakeMove(num)
 	g.findGoodSpot()
 	g.Display()
 }
@@ -120,7 +118,6 @@ func (g *Game) GameLoop() {
 	for !g.HasWinner {
 		g.GetMove()
 		g.Check4Wins()
-		// g.BasicAI()
 		g.AiMove()
 		g.Check4Wins()
 	}
@@ -131,88 +128,7 @@ func Contains(block []piece.Piece, input string) bool {
 	for _, elem := range block {
 		strBlock += elem.GetChip()
 	}
-	return strings.Contains(strBlock, input) //cheap solution but why reinvent the wheel
-}
-
-func (g *Game) Check4Horizontal(count int, player string) bool {
-	checkVal := ""
-	if player == "red" {
-		checkVal = "🔴"
-	} else if player == "yellow" {
-		checkVal = "🟡"
-	}
-	for _, row := range g.Board {
-		redString := strings.Repeat(checkVal, count)
-		if Contains(row, redString) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (g *Game) Check4Vertical(count int, player string) bool {
-	checkVal := ""
-	if player == "red" {
-		checkVal = "🔴"
-	} else if player == "yellow" {
-		checkVal = "🟡"
-	}
-	for col := 0; col < g.Width; col++ {
-		for row := 0; row <= g.Height-count; row++ {
-			win := true
-			for i := 0; i < count; i++ {
-				if g.Board[row+i][col].GetChip() != checkVal {
-					win = false
-				}
-			}
-			if win {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func (g *Game) Check4Diagonal(count int, player string) bool {
-	checkVal := ""
-	if player == "red" {
-		checkVal = "🔴"
-	} else if player == "yellow" {
-		checkVal = "🟡"
-	}
-	// Check diagonal down-right
-	for col := 0; col <= g.Width-count; col++ {
-		for row := 0; row <= g.Height-count; row++ {
-			win := true
-			for i := 0; i < count; i++ {
-				if g.Board[row+i][col+i].GetChip() != checkVal {
-					win = false
-					break
-				}
-			}
-			if win {
-				return true
-			}
-		}
-	}
-
-	// Check diagonal down-left
-	for col := count - 1; col < g.Width; col++ {
-		for row := 0; row <= g.Height-count; row++ {
-			win := true
-			for i := 0; i < count; i++ {
-				if g.Board[row+i][col-i].GetChip() != checkVal {
-					win = false
-					break
-				}
-			}
-			if win {
-				return true
-			}
-		}
-	}
-	return false
+	return strings.Contains(strBlock, input)
 }
 
 func (g *Game) RedWin() {
@@ -226,15 +142,15 @@ func (g *Game) YellowWin() {
 	g.ShowWinningMove()
 	fmt.Println("Yellow Won")
 }
-func (g *Game) Check4AllWins(num int, player string) bool {
-	return g.Check4Horizontal(num, player) || g.Check4Vertical(num, player) || g.Check4Diagonal(num, player)
-}
 
 func (g *Game) Check4Wins() {
-	if g.Check4AllWins(4, "red") {
-		g.RedWin()
-	} else if g.Check4AllWins(4, "yellow") {
-		g.YellowWin()
+	if result := g.findWinningSequence(); len(result) > 0 {
+		g.HasWinner = true
+		if g.Board[result[0][0]][result[0][1]].IsRed() {
+			g.RedWin()
+		} else {
+			g.YellowWin()
+		}
 	}
 }
 
@@ -265,22 +181,20 @@ func (g *Game) findGoodSpot() {
 }
 
 func (g *Game) IsWinningMove(col int) bool {
-	// Get the row where the piece would land
 	row, col := g.LastEmptyRow2(col)
 	if row == -1 {
 		return false
 	}
 
-	// Temporarily make the move and check for red win
 	originalPiece := g.Board[row][col]
 	g.Board[row][col] = *piece.InitPiece("red")
-	redWins := g.Check4AllWins(4, "red")
+	redResult := g.findWinningSequence()
+	redWins := len(redResult) > 0
 
-	// Check for yellow win
 	g.Board[row][col] = *piece.InitPiece("yellow")
-	yellowWins := g.Check4AllWins(4, "yellow")
+	yellowResult := g.findWinningSequence()
+	yellowWins := len(yellowResult) > 0
 
-	// Undo the move
 	g.Board[row][col] = originalPiece
 
 	return redWins || yellowWins
@@ -299,26 +213,21 @@ func (g *Game) AiMove() {
 }
 
 func (g *Game) ShowWinningMove() {
-	// Get the winning sequence coordinates
 	coords := g.findWinningSequence()
 	if len(coords) == 4 {
-		// Store original pieces
 		originals := make([]piece.Piece, 4)
 		for i, coord := range coords {
 			originals[i] = g.Board[coord[0]][coord[1]]
 			g.Board[coord[0]][coord[1]] = *piece.InitPiece("green")
 		}
 
-		// Display the board with green pieces
 		g.Display()
 
-		// Restore original pieces
 		for i, coord := range coords {
 			g.Board[coord[0]][coord[1]] = originals[i]
 		}
 	}
 }
-
 
 func (g *Game) FindMatchingSequence(jVal int, hOffSet int, wOffSet int, coords [][2]int) [][2]int {
 	for i := 0; i <= g.Height-hOffSet-1; i++ {
@@ -349,10 +258,18 @@ func (g *Game) findWinningSequence() [][2]int {
 	rightDiagonalVals := [][2]int{{1, 1}, {2, 2}, {3, 3}}
 	leftDiagonalVals := [][2]int{{1, -1}, {2, -2}, {3, -3}}
 
-	if result := g.FindMatchingSequence(0, 0, 3, horizontalVals); len(result) > 0 {return result}
-	if result := g.FindMatchingSequence(0, 3, 0, verticalVals); len(result) > 0 {return result}
-	if result := g.FindMatchingSequence(0, 3, 3, rightDiagonalVals); len(result) > 0 {return result}
-	if result := g.FindMatchingSequence(3, 3, 3, leftDiagonalVals); len(result) > 0 {return result}
+	if result := g.FindMatchingSequence(0, 0, 3, horizontalVals); len(result) > 0 {
+		return result
+	}
+	if result := g.FindMatchingSequence(0, 3, 0, verticalVals); len(result) > 0 {
+		return result
+	}
+	if result := g.FindMatchingSequence(0, 3, 3, rightDiagonalVals); len(result) > 0 {
+		return result
+	}
+	if result := g.FindMatchingSequence(3, 3, 3, leftDiagonalVals); len(result) > 0 {
+		return result
+	}
 
 	return [][2]int{}
 }
