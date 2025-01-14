@@ -109,11 +109,6 @@ func (g *Game) GetMove() {
 	g.Display()
 }
 
-func (g *Game) BasicAI() {
-	g.findGoodSpot()
-	g.Display()
-}
-
 func (g *Game) GameLoop() {
 	for !g.HasWinner {
 		g.GetMove()
